@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Decrypt File — AESVault{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <!-- App Sidebar -->
+    <aside class="app-sidebar">
+        <div class="sidebar-user">
+            <div class="user-avatar">{{ current_user['name'][0]|upper if current_user else 'U' }}</div>
+            <div class="user-details">
+                <span class="user-name">{{ current_user['name'] if current_user else 'User' }}</span>
+                <span class="user-email">{{ current_user['email'] if current_user else '' }}</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard') }}" class="sidebar-link">
+                <span class="sidebar-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('encrypt') }}" class="sidebar-link">
+                <span class="sidebar-icon">🔐</span>
+                <span>Encrypt File</span>
+            </a>
+            <a href="{{ url_for('decrypt') }}" class="sidebar-link active">
+                <span class="sidebar-icon">🔓</span>
+                <span>Decrypt File</span>
+            </a>
+            <a href="{{ url_for('history') }}" class="sidebar-link">
+                <span class="sidebar-icon">📜</span>
+                <span>File History</span>
+            </a>
+            <a href="{{ url_for('aes_educational') }}" class="sidebar-link">
+                <span class="sidebar-icon">💡</span>
+                <span>Learn AES</span>
+            </a>
+            <a href="{{ url_for('profile') }}" class="sidebar-link">
+                <span class="sidebar-icon">👤</span>
+                <span>My Profile</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="sidebar-link logout-link">
+                <span class="sidebar-icon">🚪</span>
+                <span>Log Out</span>
+            </a>
+        </nav>
+    </aside>
+
+    <div class="app-main">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">🔓 Decrypt Your File</h1>
+                <p class="page-subtitle">Verify GCM authentication tag integrity and recover your original file.</p>
+            </div>
+            <div class="algorithm-chip">
+                <span class="chip-dot"></span>
+                <span>AES-256-GCM Integrity Check</span>
+            </div>
+        </div>
+
+        {% if decryption_done %}
+            <!-- Decryption Success Card -->
+            <div class="result-success-card">
+                <div class="success-icon-wrap">
+                    <span class="success-checkmark">✓</span>
+                </div>
+                <h2>Decryption Successful!</h2>
+                <p class="success-desc">
+                    The 128-bit AES-GCM authentication tag verified cryptographic integrity. The original file has been fully restored with 100% bit-for-bit fidelity.
+                </p>
+
+                <div class="file-summary-box">
+                    <div class="summary-row">
+                        <span class="label">Recovered File:</span>
+                        <span class="value font-mono">{{ decrypted_filename }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">Integrity Status:</span>
+                        <span class="value" style="color: #22C55E;">✓ Verified (Untampered)</span>
+                    </div>
+                </div>
+
+                <div class="result-actions">
+                    <a href="{{ url_for('download_file', file_type='decrypted', filename=download_path) }}" class="btn-primary btn-large">
+                        ⬇️ Download Restored File ({{ decrypted_filename }})
+                    </a>
+                    <a href="{{ url_for('decrypt') }}" class="btn-secondary btn-large">
+                        🔄 Decrypt Another File
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            <!-- Decryption Input Card -->
+            <div class="crypto-card">
+                <form id="decryptForm" method="POST" action="{{ url_for('decrypt') }}" enctype="multipart/form-data">
+                    <!-- File Dropzone -->
+                    <div class="upload-dropzone" id="decryptDropzone">
+                        <input type="file" id="decryptFileInput" name="file" accept=".enc" class="file-input-hidden" required>
+                        <div class="dropzone-content" id="decryptDropzonePrompt">
+                            <div class="dropzone-icon">🔒</div>
+                            <h3>Select your encrypted (.enc) file</h3>
+                            <p>or <button type="button" class="btn-browse" onclick="document.getElementById('decryptFileInput').click()">Browse Files</button></p>
+                            <span class="dropzone-limit">Upload files previously encrypted by AESVault (.enc extension).</span>
+                        </div>
+
+                        <!-- Selected File Preview -->
+                        <div class="file-preview-card" id="decryptFilePreview" style="display: none;">
+                            <div class="file-preview-icon">📦</div>
+                            <div class="file-preview-meta">
+                                <span class="preview-name" id="decryptFilename">document.pdf.enc</span>
+                                <div class="preview-tags">
+                                    <span class="preview-tag" id="decryptFilesize">0 KB</span>
+                                    <span class="preview-tag">Encrypted Package</span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-remove-file" id="decryptRemoveBtn" title="Remove">&times;</button>
+                        </div>
+                    </div>
+
+                    <!-- Secret Key Input -->
+                    <div class="key-section">
+                        <div class="key-header">
+                            <div>
+                                <h3>Enter AES-256 Secret Key</h3>
+                                <p>Provide the 32-byte Base64 key that was used when encrypting this file.</p>
+                            </div>
+                            <button type="button" class="btn-secondary btn-sm" id="btnPasteKey">
+                                📋 Paste from Clipboard
+                            </button>
+                        </div>
+
+                        <div class="key-input-container">
+                            <input type="password" id="decryptKeyInput" name="aes_key" class="key-input font-mono" placeholder="Paste your 256-bit AES key here..." required autocomplete="off">
+                            <button type="button" class="key-btn" id="btnToggleDecryptKey" title="Show / Hide Key">👁️</button>
+                        </div>
+
+                        <div class="info-alert-box">
+                            <span class="info-icon">💡</span>
+                            <p>
+                                <strong>How GCM Integrity Works:</strong> AES-GCM computes an internal 128-bit authentication tag. If the key is off by even one character or if someone changed a single byte of the file, decryption halts immediately.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="form-action-row">
+                        <button type="submit" class="btn-primary btn-large btn-block" id="btnSubmitDecrypt">
+                            🔓 Decrypt & Verify File
+                        </button>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/decrypt.js') }}"></script>
+{% endblock %}

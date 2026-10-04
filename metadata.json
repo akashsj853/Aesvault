@@ -1,0 +1,6 @@
+{
+  "name": "AESVault — Secure File Encryption System",
+  "description": "Protect and recover your files with authenticated AES-256-GCM encryption. Academic cybersecurity project with live encryption, decryption, educational visualizer, and viva guide.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

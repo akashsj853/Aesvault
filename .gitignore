@@ -1,0 +1,27 @@
+# Python & Environment
+venv/
+env/
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# SQLite Database
+instance/*.db
+*.sqlite3
+
+# Upload & Cryptographic Caches
+uploads/*
+!uploads/.gitkeep
+encrypted/*
+!encrypted/.gitkeep
+decrypted/*
+!decrypted/.gitkeep
+
+# System & IDE
+.DS_Store
+.vscode/
+.idea/
+dist/
+node_modules/

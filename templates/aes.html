@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Understanding AES & Interactive Visualizer — AESVault{% endblock %}
+
+{% block content %}
+<div class="education-container">
+    <!-- Header -->
+    <div class="edu-header">
+        <span class="sub-heading">CRYPTOGRAPHIC ACADEMY</span>
+        <h1>Understanding the Advanced Encryption Standard (AES)</h1>
+        <p class="edu-subtitle">
+            An in-depth, academic explanation of AES-256, Galois/Counter Mode (GCM), symmetric key cryptography, and authenticated data integrity.
+        </p>
+    </div>
+
+    <!-- Interactive Visualizer Widget -->
+    <div class="visualizer-wrapper">
+        <div class="visualizer-card">
+            <div class="visualizer-header">
+                <div>
+                    <span class="badge-tag">LIVE DEMONSTRATION</span>
+                    <h2>Interactive AES-256-GCM Visualizer</h2>
+                    <p>Observe how plaintext is transformed into authenticated ciphertext using a real 256-bit key and 12-byte nonce.</p>
+                </div>
+            </div>
+
+            <div class="visualizer-body">
+                <div class="vis-input-group">
+                    <label for="visInputText">1. Plaintext Input (Data to Encrypt):</label>
+                    <input type="text" id="visInputText" class="vis-text-input" value="Hello AESVault" placeholder="Type text here...">
+                </div>
+
+                <div class="vis-action-row">
+                    <button type="button" class="btn-primary" id="btnVisEncrypt">
+                        ⚡ Step 1: Encrypt Plaintext &rarr;
+                    </button>
+                    <button type="button" class="btn-secondary" id="btnVisNewKey">
+                        🎲 Generate Fresh AES Key
+                    </button>
+                </div>
+
+                <!-- Live Pipeline Visualization Stages -->
+                <div class="vis-stages" id="visStages">
+                    <!-- Stage 1: Key & Nonce -->
+                    <div class="vis-box" id="visBoxKey">
+                        <div class="vis-box-title">
+                            <span>🔑 Generated 256-bit Secret Key</span>
+                            <span class="tag-len">32 Bytes (256 bits)</span>
+                        </div>
+                        <div class="vis-code font-mono" id="visKeyHex">Click 'Encrypt Plaintext' to initialize...</div>
+                    </div>
+
+                    <div class="vis-box" id="visBoxNonce">
+                        <div class="vis-box-title">
+                            <span>🎲 Generated Nonce (Number Used Once)</span>
+                            <span class="tag-len">12 Bytes (96 bits)</span>
+                        </div>
+                        <div class="vis-code font-mono" id="visNonceHex">A unique 96-bit vector generated per encryption</div>
+                    </div>
+
+                    <!-- Stage 2: AES Engine Transformation -->
+                    <div class="vis-transformation">
+                        <div class="trans-flow">
+                            <span class="flow-item">Plaintext Bytes</span>
+                            <span class="flow-arrow">&rarr;</span>
+                            <span class="flow-item highlight">AES-256 Core Cipher + GMAC Tag Generator</span>
+                            <span class="flow-arrow">&rarr;</span>
+                            <span class="flow-item">Ciphertext + 128-bit Tag</span>
+                        </div>
+                    </div>
+
+                    <!-- Stage 3: Ciphertext & Tag -->
+                    <div class="vis-box vis-box-cipher" id="visBoxCipher">
+                        <div class="vis-box-title">
+                            <span>🔒 Resulting Ciphertext + 128-bit GCM Tag</span>
+                            <span class="tag-len">Hexadecimal Representation</span>
+                        </div>
+                        <div class="vis-code font-mono" id="visCipherHex">Waiting for encryption...</div>
+                        <div class="vis-meta-note" id="visTagBreakdown"></div>
+                    </div>
+
+                    <!-- Stage 4: Decryption verification -->
+                    <div class="vis-decrypt-action" id="visDecryptSection" style="display: none;">
+                        <button type="button" class="btn-success" id="btnVisDecrypt">
+                            🔓 Step 2: Decrypt Ciphertext & Verify Tag &rarr;
+                        </button>
+                        <div class="vis-box vis-box-plain" id="visBoxDecrypted" style="display: none; margin-top: 1rem;">
+                            <div class="vis-box-title">
+                                <span>📄 Restored Plaintext (Integrity 100% Verified)</span>
+                                <span class="tag-len text-green">✓ Matched</span>
+                            </div>
+                            <div class="vis-code font-mono" id="visDecryptedText"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="demo-disclaimer">
+                    <span>ℹ️ <strong>Educational Note:</strong> This visualizer calls the backend cryptographic engine using real AES-256-GCM. No fake or simulated mathematics are used.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Educational Deep-Dive Sections -->
+    <div class="edu-grid">
+        <!-- Section: Symmetric Encryption -->
+        <article class="edu-card">
+            <div class="edu-card-icon">🔄</div>
+            <h2>1. Symmetric Cryptography</h2>
+            <p>
+                In <strong>symmetric encryption</strong>, a single shared secret key is used for both the encryption of plaintext and the decryption of ciphertext.
+            </p>
+            <div class="math-diagram">
+                <code>Plaintext + Secret Key  ==&gt;  Ciphertext (Encryption)</code><br>
+                <code>Ciphertext + Secret Key ==&gt;  Plaintext  (Decryption)</code>
+            </div>
+            <p>
+                Because both parties require the same key, keeping the key confidential is paramount. If an adversary acquires the key, they can decrypt all intercepted traffic.
+            </p>
+        </article>
+
+        <!-- Section: AES Key Sizes -->
+        <article class="edu-card">
+            <div class="edu-card-icon">📏</div>
+            <h2>2. Key Sizes: AES-128 vs 192 vs 256</h2>
+            <p>
+                AES was standardized by NIST in 2001 (FIPS 197) to replace DES. AES supports three standardized key lengths with different internal transformation rounds:
+            </p>
+            <table class="edu-table">
+                <thead>
+                    <tr>
+                        <th>Variant</th>
+                        <th>Key Size</th>
+                        <th>Rounds</th>
+                        <th>Possible Keys</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>AES-128</td>
+                        <td>16 bytes (128 bits)</td>
+                        <td>10 rounds</td>
+                        <td>3.4 &times; 10<sup>38</sup></td>
+                    </tr>
+                    <tr>
+                        <td>AES-192</td>
+                        <td>24 bytes (192 bits)</td>
+                        <td>12 rounds</td>
+                        <td>6.2 &times; 10<sup>57</sup></td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td><strong>AES-256 (This Project)</strong></td>
+                        <td><strong>32 bytes (256 bits)</strong></td>
+                        <td><strong>14 rounds</strong></td>
+                        <td><strong>1.1 &times; 10<sup>77</sup></strong></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p class="edu-note">
+                AES-256 provides the highest level of security, rendering brute-force attacks physically impossible with classical computers.
+            </p>
+        </article>
+
+        <!-- Section: Galois/Counter Mode (GCM) -->
+        <article class="edu-card">
+            <div class="edu-card-icon">🛡️</div>
+            <h2>3. Authenticated Encryption with GCM</h2>
+            <p>
+                Traditional modes of operation like <strong>CBC (Cipher Block Chaining)</strong> or <strong>ECB (Electronic Codebook)</strong> only provide confidentiality, leaving files vulnerable to bit-flipping attacks and padding oracle exploits.
+            </p>
+            <p>
+                <strong>GCM (Galois/Counter Mode)</strong> provides <em>Authenticated Encryption with Associated Data (AEAD)</em>:
+            </p>
+            <ul>
+                <li><strong>Counter Mode (CTR):</strong> Transforms the block cipher into a high-speed stream cipher by encrypting sequential counter blocks.</li>
+                <li><strong>Galois Message Authentication Code (GMAC):</strong> Uses universal hashing over the binary Galois Field GF(2<sup>128</sup>) to compute a 128-bit authentication tag.</li>
+                <li><strong>Integrity Guarantee:</strong> If even a single bit in the ciphertext is altered in transit or on disk, the tag check fails automatically and decryption is refused.</li>
+            </ul>
+        </article>
+
+        <!-- Section: The Nonce -->
+        <article class="edu-card">
+            <div class="edu-card-icon">🎲</div>
+            <h2>4. The Role of the Nonce (IV)</h2>
+            <p>
+                A <strong>Nonce</strong> ("Number used ONCE") is a unique vector supplied alongside the key during encryption.
+            </p>
+            <div class="warning-callout">
+                <h4>⚠️ CRITICAL CRYPTOGRAPHIC RULE: Nonce Reuse</h4>
+                <p>
+                    In AES-GCM, <strong>NEVER reuse a nonce with the same key</strong>. Nonce reuse completely destroys the integrity guarantees of GCM and can expose the internal authentication hash key (H), allowing attackers to forge tags.
+                </p>
+            </div>
+            <p>
+                In AESVault, an independent, cryptographically secure 12-byte (96-bit) nonce is generated via <code>os.urandom(12)</code> for every single file encryption.
+            </p>
+        </article>
+    </div>
+
+    <!-- College Viva Guide -->
+    <div class="viva-section" id="vivaGuide">
+        <div class="section-header">
+            <span class="sub-heading">ACADEMIC EXAMINATION</span>
+            <h2>🎓 Viva Voce Preparation Guide for Students</h2>
+            <p>Master these core concepts and questions to explain this project to professors and external examiners.</p>
+        </div>
+
+        <div class="viva-summary-box">
+            <h3>30-Second Elevator Pitch to Your Examiner:</h3>
+            <blockquote class="viva-pitch">
+                "My project is <strong>AESVault</strong>, a secure file encryption and decryption system built exclusively around the <strong>Advanced Encryption Standard (AES)</strong>. The system implements <strong>AES-256 in Galois/Counter Mode (GCM)</strong>, which provides authenticated encryption. This guarantees that files are not only kept confidential through 14 rounds of 256-bit encryption, but also protected from tampering via a 128-bit authentication tag. The project features secure user authentication, safe file streaming without path traversal, complete audit history, and zero plaintext key storage."
+            </blockquote>
+        </div>
+
+        <div class="qa-accordion">
+            <details class="qa-item" open>
+                <summary>Q1: Why did you choose AES-256 over RSA or Blowfish?</summary>
+                <div class="qa-content">
+                    <p>
+                        <strong>Answer:</strong> RSA is an asymmetric cipher designed for key exchange and digital signatures, not for bulk file encryption—it is computationally slow and limited to encrypting data smaller than its key size. AES is a symmetric block cipher standardized by NIST, optimized for high throughput, and is the global benchmark for data-at-rest protection. AES-256 was selected because its 256-bit key offers 2<sup>256</sup> keyspace, making brute-force attacks computationally infeasible.
+                    </p>
+                </div>
+            </details>
+
+            <details class="qa-item">
+                <summary>Q2: What is the difference between AES-CBC and AES-GCM?</summary>
+                <div class="qa-content">
+                    <p>
+                        <strong>Answer:</strong> AES-CBC (Cipher Block Chaining) requires padding (PKCS#7) to fit 16-byte block boundaries and only provides confidentiality. It requires a separate MAC (like HMAC-SHA256) to detect tampering. AES-GCM (Galois/Counter Mode) does not require padding, can run in parallel for high speed, and natively produces a 128-bit authentication tag (AEAD). This ensures tamper-detection is built directly into the decryption step.
+                    </p>
+                </div>
+            </details>
+
+            <details class="qa-item">
+                <summary>Q3: Where is the AES key stored?</summary>
+                <div class="qa-content">
+                    <p>
+                        <strong>Answer:</strong> For security best practices, the AES key is <strong>never stored on the server or in the database</strong>. The key is generated and provided to the user. The user is responsible for retaining the key. When decrypting, the user must supply the key. If we stored the keys in the database next to the files, any database breach would compromise all user files.
+                    </p>
+                </div>
+            </details>
+
+            <details class="qa-item">
+                <summary>Q4: What happens if an attacker modifies one byte in the encrypted file?</summary>
+                <div class="qa-content">
+                    <p>
+                        <strong>Answer:</strong> During decryption, the GCM algorithm recomputes the Galois field authentication tag over the received ciphertext. If even one byte or bit has been altered, the computed tag will not match the 16-byte tag stored in the package. The Python cryptography library will throw an <code>InvalidTag</code> exception, and AESVault immediately rejects the file without releasing any corrupted plaintext.
+                    </p>
+                </div>
+            </details>
+
+            <details class="qa-item">
+                <summary>Q5: Why is the nonce 12 bytes and not secret?</summary>
+                <div class="qa-content">
+                    <p>
+                        <strong>Answer:</strong> NIST SP 800-38D specifies a 96-bit (12-byte) nonce as the optimal size for GCM to avoid internal counter computation overhead. The nonce does not need to be secret, but it <em>must be unique</em> for every encryption performed with the same key. That is why it is safely stored in plaintext at the beginning of the .enc binary package.
+                    </p>
+                </div>
+            </details>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/aes.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}AESVault — Secure File Encryption and Decryption System{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="hero-glow"></div>
+    <div class="hero-container">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="pulsing-dot"></span>
+                <span>Authenticated AES-256-GCM Encryption</span>
+            </div>
+            <h1 class="hero-title">
+                Secure Your Files With <span class="gradient-text">AES Encryption</span>
+            </h1>
+            <p class="hero-description">
+                Protect your files with fast and authenticated AES-256 encryption. Generate cryptographically random keys, prevent tampering with 128-bit authentication tags, and decrypt anytime with your secret key.
+            </p>
+            <div class="hero-actions">
+                {% if current_user %}
+                    <a href="{{ url_for('encrypt') }}" class="btn-primary btn-large">Start Encrypting &rarr;</a>
+                    <a href="{{ url_for('dashboard') }}" class="btn-secondary btn-large">Go to Dashboard</a>
+                {% else %}
+                    <a href="{{ url_for('register') }}" class="btn-primary btn-large">Start Encrypting &rarr;</a>
+                    <a href="{{ url_for('aes_educational') }}" class="btn-secondary btn-large">Learn About AES</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Visual Encryption Pipeline Animation -->
+        <div class="hero-visual">
+            <div class="pipeline-card">
+                <div class="pipeline-header">
+                    <span class="window-dot red"></span>
+                    <span class="window-dot yellow"></span>
+                    <span class="window-dot green"></span>
+                    <span class="pipeline-title">aes_encryption_pipeline.py</span>
+                </div>
+                <div class="pipeline-stages">
+                    <div class="pipeline-node plaintext-node">
+                        <div class="node-icon">📄</div>
+                        <div class="node-info">
+                            <span class="node-label">ORIGINAL FILE</span>
+                            <span class="node-detail">project_report.pdf</span>
+                        </div>
+                    </div>
+
+                    <div class="pipeline-connector">
+                        <div class="connector-line">
+                            <div class="connector-pulse"></div>
+                        </div>
+                        <div class="cipher-badge">
+                            <span>⚡ AES-256-GCM Engine</span>
+                            <small>32-byte Key + 12-byte Nonce</small>
+                        </div>
+                        <div class="connector-line">
+                            <div class="connector-pulse"></div>
+                        </div>
+                    </div>
+
+                    <div class="pipeline-node ciphertext-node">
+                        <div class="node-icon">🔒</div>
+                        <div class="node-info">
+                            <span class="node-label">SECURE CIPHERTEXT</span>
+                            <span class="node-detail">project_report.pdf.enc</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pipeline-terminal">
+                    <code><span class="term-green">✓</span> Nonce generated: <span class="term-dim">7a9f82b1... (12 bytes)</span></code>
+                    <code><span class="term-green">✓</span> GCM Tag appended: <span class="term-dim">3e14c9a0... (128 bits)</span></code>
+                    <code><span class="term-green">✓</span> Status: <span class="term-cyan">Authenticated & Protected</span></code>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 3-Step Workflow -->
+<section class="workflow-section">
+    <div class="section-container">
+        <div class="section-header">
+            <span class="sub-heading">HOW IT WORKS</span>
+            <h2>Simple 3-Step Security Workflow</h2>
+            <p>Effortlessly encrypt and decrypt files with zero complexity.</p>
+        </div>
+
+        <div class="workflow-grid">
+            <div class="workflow-step">
+                <div class="step-number">01</div>
+                <div class="step-icon">📂</div>
+                <h3>Select File</h3>
+                <p>Drag and drop any document, image, code file, or archive up to 100 MB.</p>
+            </div>
+
+            <div class="workflow-step highlight-step">
+                <div class="step-number">02</div>
+                <div class="step-icon">🔐</div>
+                <h3>Encrypt with AES-256</h3>
+                <p>Generate a 256-bit key. AES-GCM calculates ciphertext and a cryptographic authentication tag.</p>
+            </div>
+
+            <div class="workflow-step">
+                <div class="step-number">03</div>
+                <div class="step-icon">💾</div>
+                <h3>Download Secure File</h3>
+                <p>Save your .enc file and store your secret key safely. Recover your exact file anytime.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- What is AES & Why AES Sections -->
+<section class="education-preview-section">
+    <div class="section-container">
+        <div class="dual-grid">
+            <div class="info-card">
+                <div class="info-icon">🛡️</div>
+                <h3>What is AES?</h3>
+                <p>
+                    AES (Advanced Encryption Standard), formerly known as <strong>Rijndael</strong>, was established by the National Institute of Standards and Technology (NIST) in 2001. It is a symmetric block cipher that processes 128-bit blocks of data using secret keys of 128, 192, or 256 bits.
+                </p>
+                <ul class="feature-bullets">
+                    <li>✓ Symmetric: same secret key for encryption & decryption</li>
+                    <li>✓ Global gold standard adopted by governments and enterprises</li>
+                    <li>✓ High efficiency in software and hardware implementation</li>
+                </ul>
+            </div>
+
+            <div class="info-card">
+                <div class="info-icon">⚡</div>
+                <h3>Why AES-256-GCM?</h3>
+                <p>
+                    Standard AES modes like CBC require a separate HMAC to prevent tampering. <strong>Galois/Counter Mode (GCM)</strong> provides Authenticated Encryption with Associated Data (AEAD), combining confidentiality and cryptographic integrity in one streamlined operation.
+                </p>
+                <ul class="feature-bullets">
+                    <li>✓ 256-bit key offers 2<sup>256</sup> possible combinations</li>
+                    <li>✓ Automatically detects altered or corrupted files</li>
+                    <li>✓ Immediate rejection when an incorrect key is attempted</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="cta-banner">
+            <div class="cta-text">
+                <h3>Ready to safeguard your sensitive documents?</h3>
+                <p>Experience real AES-256-GCM encryption with complete confidentiality.</p>
+            </div>
+            <div class="cta-button">
+                {% if current_user %}
+                    <a href="{{ url_for('encrypt') }}" class="btn-primary">Encrypt File Now &rarr;</a>
+                {% else %}
+                    <a href="{{ url_for('register') }}" class="btn-primary">Create Free Account &rarr;</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

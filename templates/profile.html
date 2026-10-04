@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile — AESVault{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <aside class="app-sidebar">
+        <div class="sidebar-user">
+            <div class="user-avatar">{{ current_user['name'][0]|upper if current_user else 'U' }}</div>
+            <div class="user-details">
+                <span class="user-name">{{ current_user['name'] if current_user else 'User' }}</span>
+                <span class="user-email">{{ current_user['email'] if current_user else '' }}</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard') }}" class="sidebar-link">
+                <span class="sidebar-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('encrypt') }}" class="sidebar-link">
+                <span class="sidebar-icon">🔐</span>
+                <span>Encrypt File</span>
+            </a>
+            <a href="{{ url_for('decrypt') }}" class="sidebar-link">
+                <span class="sidebar-icon">🔓</span>
+                <span>Decrypt File</span>
+            </a>
+            <a href="{{ url_for('history') }}" class="sidebar-link">
+                <span class="sidebar-icon">📜</span>
+                <span>File History</span>
+            </a>
+            <a href="{{ url_for('aes_educational') }}" class="sidebar-link">
+                <span class="sidebar-icon">💡</span>
+                <span>Learn AES</span>
+            </a>
+            <a href="{{ url_for('profile') }}" class="sidebar-link active">
+                <span class="sidebar-icon">👤</span>
+                <span>My Profile</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="sidebar-link logout-link">
+                <span class="sidebar-icon">🚪</span>
+                <span>Log Out</span>
+            </a>
+        </nav>
+    </aside>
+
+    <div class="app-main">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">👤 User Profile & Security</h1>
+                <p class="page-subtitle">Manage your account information and authentication credentials.</p>
+            </div>
+        </div>
+
+        <div class="profile-cards-grid">
+            <!-- Account Info Card -->
+            <div class="content-panel">
+                <div class="panel-header">
+                    <h2>Account Details</h2>
+                </div>
+                <div class="profile-info-list">
+                    <div class="profile-row">
+                        <span class="p-label">Registered Name:</span>
+                        <span class="p-val font-semibold">{{ user['name'] }}</span>
+                    </div>
+                    <div class="profile-row">
+                        <span class="p-label">Email Address:</span>
+                        <span class="p-val font-mono">{{ user['email'] }}</span>
+                    </div>
+                    <div class="profile-row">
+                        <span class="p-label">Account Created:</span>
+                        <span class="p-val text-muted">{{ user['created_at'] }}</span>
+                    </div>
+                    <div class="profile-row">
+                        <span class="p-label">Password Storage:</span>
+                        <span class="p-val text-green font-mono">werkzeug.security (pbkdf2:sha256)</span>
+                    </div>
+                </div>
+
+                <div class="profile-edit-section">
+                    <h3>Update Display Name</h3>
+                    <form method="POST" action="{{ url_for('profile') }}" class="profile-form">
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" id="name" name="name" value="{{ user['name'] }}" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Update Profile</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Security Architecture Card -->
+            <div class="content-panel">
+                <div class="panel-header">
+                    <h2>Security Architecture</h2>
+                </div>
+                <div class="security-checklist">
+                    <div class="sec-item">
+                        <span class="sec-check">✓</span>
+                        <div>
+                            <strong>No Plaintext AES Keys Stored</strong>
+                            <p>Keys are generated client-side or ephemerally and never written to the database.</p>
+                        </div>
+                    </div>
+                    <div class="sec-item">
+                        <span class="sec-check">✓</span>
+                        <div>
+                            <strong>Path Traversal Defense</strong>
+                            <p>File delivery uses Werkzeug secure_filename and user ID sandboxing.</p>
+                        </div>
+                    </div>
+                    <div class="sec-item">
+                        <span class="sec-check">✓</span>
+                        <div>
+                            <strong>Session Security</strong>
+                            <p>HttpOnly session cookies with Lax SameSite protection against CSRF.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="logout-panel-action">
+                    <a href="{{ url_for('logout') }}" class="btn-danger btn-block">End Active Session (Log Out)</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

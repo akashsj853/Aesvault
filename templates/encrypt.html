@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Encrypt File — AESVault{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <!-- App Sidebar -->
+    <aside class="app-sidebar">
+        <div class="sidebar-user">
+            <div class="user-avatar">{{ current_user['name'][0]|upper if current_user else 'U' }}</div>
+            <div class="user-details">
+                <span class="user-name">{{ current_user['name'] if current_user else 'User' }}</span>
+                <span class="user-email">{{ current_user['email'] if current_user else '' }}</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard') }}" class="sidebar-link">
+                <span class="sidebar-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('encrypt') }}" class="sidebar-link active">
+                <span class="sidebar-icon">🔐</span>
+                <span>Encrypt File</span>
+            </a>
+            <a href="{{ url_for('decrypt') }}" class="sidebar-link">
+                <span class="sidebar-icon">🔓</span>
+                <span>Decrypt File</span>
+            </a>
+            <a href="{{ url_for('history') }}" class="sidebar-link">
+                <span class="sidebar-icon">📜</span>
+                <span>File History</span>
+            </a>
+            <a href="{{ url_for('aes_educational') }}" class="sidebar-link">
+                <span class="sidebar-icon">💡</span>
+                <span>Learn AES</span>
+            </a>
+            <a href="{{ url_for('profile') }}" class="sidebar-link">
+                <span class="sidebar-icon">👤</span>
+                <span>My Profile</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="sidebar-link logout-link">
+                <span class="sidebar-icon">🚪</span>
+                <span>Log Out</span>
+            </a>
+        </nav>
+    </aside>
+
+    <div class="app-main">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">🔐 Encrypt Your File</h1>
+                <p class="page-subtitle">Standard AES-256-GCM authenticated encryption with a unique 12-byte nonce.</p>
+            </div>
+            <div class="algorithm-chip">
+                <span class="chip-dot"></span>
+                <span>AES-256-GCM (256-bit Key)</span>
+            </div>
+        </div>
+
+        {% if encryption_done %}
+            <!-- Success Download Panel -->
+            <div class="result-success-card">
+                <div class="success-icon-wrap">
+                    <span class="success-checkmark">✓</span>
+                </div>
+                <h2>File Encrypted Successfully!</h2>
+                <p class="success-desc">
+                    Your file has been transformed into a secure binary package with an authenticated GCM checksum tag.
+                </p>
+
+                <div class="file-summary-box">
+                    <div class="summary-row">
+                        <span class="label">Encrypted File:</span>
+                        <span class="value font-mono">{{ encrypted_filename }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">Encryption Standard:</span>
+                        <span class="value">AES-256-GCM (NIST SP 800-38D)</span>
+                    </div>
+                </div>
+
+                <div class="result-actions">
+                    <a href="{{ url_for('download_file', file_type='encrypted', filename=download_path) }}" class="btn-primary btn-large">
+                        ⬇️ Download Encrypted File (.enc)
+                    </a>
+                    <a href="{{ url_for('encrypt') }}" class="btn-secondary btn-large">
+                        🔄 Encrypt Another File
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            <!-- Encryption Form -->
+            <div class="crypto-card">
+                <form id="encryptForm" method="POST" action="{{ url_for('encrypt') }}" enctype="multipart/form-data">
+                    <!-- Drag and Drop Area -->
+                    <div class="upload-dropzone" id="dropzone">
+                        <input type="file" id="fileInput" name="file" class="file-input-hidden" required>
+                        <div class="dropzone-content" id="dropzonePrompt">
+                            <div class="dropzone-icon">📁</div>
+                            <h3>Drag & Drop your file here</h3>
+                            <p>or <button type="button" class="btn-browse" onclick="document.getElementById('fileInput').click()">Choose File</button></p>
+                            <span class="dropzone-limit">Maximum upload size: 100 MB. Any file type supported.</span>
+                        </div>
+
+                        <!-- Selected File Preview -->
+                        <div class="file-preview-card" id="filePreview" style="display: none;">
+                            <div class="file-preview-icon">📄</div>
+                            <div class="file-preview-meta">
+                                <span class="preview-name" id="previewFilename">filename.pdf</span>
+                                <div class="preview-tags">
+                                    <span class="preview-tag" id="previewFilesize">0 KB</span>
+                                    <span class="preview-tag" id="previewFiletype">document</span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-remove-file" id="removeFileBtn" title="Select different file">&times;</button>
+                        </div>
+                    </div>
+
+                    <!-- Key Management Section -->
+                    <div class="key-section">
+                        <div class="key-header">
+                            <div>
+                                <h3>Secret AES-256 Key</h3>
+                                <p>Symmetric 32-byte key used for both encryption and decryption.</p>
+                            </div>
+                            <button type="button" class="btn-secondary btn-sm" id="btnGenerateKey">
+                                ⚡ Generate AES Key
+                            </button>
+                        </div>
+
+                        <div class="key-input-container">
+                            <input type="password" id="aesKeyInput" name="aes_key" class="key-input font-mono" placeholder="Click 'Generate AES Key' or paste a 32-byte Base64 key" required autocomplete="off">
+                            <button type="button" class="key-btn" id="btnToggleKeyVisibility" title="Show / Hide Key">👁️</button>
+                            <button type="button" class="key-btn" id="btnCopyKey" title="Copy to Clipboard">📋 Copy</button>
+                            <button type="button" class="key-btn" id="btnDownloadKey" title="Download Key File">💾 Save</button>
+                        </div>
+
+                        <div class="key-warning-box">
+                            <span class="warning-icon">⚠️</span>
+                            <div>
+                                <strong>Keep your AES key safe.</strong>
+                                <p>If you lose this key, the encrypted file cannot be decrypted. For security, your key is never saved on our server.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Progress Visualizer (Hidden initially) -->
+                    <div class="encryption-progress-box" id="progressBox" style="display: none;">
+                        <h4>Processing AES-256-GCM Encryption...</h4>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
+                        </div>
+                        <ul class="progress-steps-list">
+                            <li id="step1" class="step-pending"><span class="step-status">○</span> Validating file and parameters</li>
+                            <li id="step2" class="step-pending"><span class="step-status">○</span> Generating secure 12-byte random nonce</li>
+                            <li id="step3" class="step-pending"><span class="step-status">○</span> Executing AES-256-GCM cipher & 128-bit tag</li>
+                            <li id="step4" class="step-pending"><span class="step-status">○</span> Packing binary format with magic header 'AESV'</li>
+                            <li id="step5" class="step-pending"><span class="step-status">○</span> Complete</li>
+                        </ul>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="form-action-row">
+                        <button type="submit" class="btn-primary btn-large btn-block" id="btnSubmitEncrypt">
+                            🔐 Encrypt File With AES-256
+                        </button>
+                    </div>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/encrypt.js') }}"></script>
+{% endblock %}

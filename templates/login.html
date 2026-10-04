@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In — AESVault{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon">🔐</div>
+            <h2>Sign In to AESVault</h2>
+            <p>Access your encrypted files and AES security dashboard.</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('login') }}" class="auth-form" id="loginForm">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" value="{{ email or '' }}" placeholder="student@university.edu" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-input-wrap">
+                    <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+                    <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('password', this)" title="Show/Hide Password">👁️</button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary btn-block">Sign In &rarr;</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="{{ url_for('register') }}">Create an account</a></p>
+        </div>
+
+        <div class="demo-credential-box">
+            <span>💡 Academic Quick Demo:</span>
+            <button type="button" class="btn-demo-fill" onclick="fillDemoCredentials()">Fill Demo User</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function fillDemoCredentials() {
+    document.getElementById('email').value = 'student@aesvault.local';
+    document.getElementById('password').value = 'aesvault2026';
+}
+</script>
+{% endblock %}

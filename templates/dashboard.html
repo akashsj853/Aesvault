@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — AESVault{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <!-- App Sidebar -->
+    <aside class="app-sidebar">
+        <div class="sidebar-user">
+            <div class="user-avatar">{{ current_user['name'][0]|upper if current_user else 'U' }}</div>
+            <div class="user-details">
+                <span class="user-name">{{ current_user['name'] if current_user else 'User' }}</span>
+                <span class="user-email">{{ current_user['email'] if current_user else '' }}</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard') }}" class="sidebar-link active">
+                <span class="sidebar-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('encrypt') }}" class="sidebar-link">
+                <span class="sidebar-icon">🔐</span>
+                <span>Encrypt File</span>
+            </a>
+            <a href="{{ url_for('decrypt') }}" class="sidebar-link">
+                <span class="sidebar-icon">🔓</span>
+                <span>Decrypt File</span>
+            </a>
+            <a href="{{ url_for('history') }}" class="sidebar-link">
+                <span class="sidebar-icon">📜</span>
+                <span>File History</span>
+            </a>
+            <a href="{{ url_for('aes_educational') }}" class="sidebar-link">
+                <span class="sidebar-icon">💡</span>
+                <span>Learn AES</span>
+            </a>
+            <a href="{{ url_for('profile') }}" class="sidebar-link">
+                <span class="sidebar-icon">👤</span>
+                <span>My Profile</span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="sidebar-link logout-link">
+                <span class="sidebar-icon">🚪</span>
+                <span>Log Out</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-info-box">
+            <span class="info-tag">ALGORITHM</span>
+            <h4>AES-256-GCM</h4>
+            <p>256-bit symmetric cipher with 128-bit authentication tag verification.</p>
+        </div>
+    </aside>
+
+    <!-- App Main Body -->
+    <div class="app-main">
+        <div class="dashboard-header">
+            <div>
+                <h1 class="page-title">Welcome back, {{ current_user['name'] }} 👋</h1>
+                <p class="page-subtitle">Here is your cryptographic file security summary.</p>
+            </div>
+            <div class="header-action-btns">
+                <a href="{{ url_for('encrypt') }}" class="btn-primary">+ Encrypt New File</a>
+            </div>
+        </div>
+
+        <!-- Dynamic Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon purple">⚡</div>
+                <div class="stat-data">
+                    <span class="stat-label">Total Operations</span>
+                    <h3 class="stat-value">{{ stats.total_operations }}</h3>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon green">🔐</div>
+                <div class="stat-data">
+                    <span class="stat-label">Encrypted Files</span>
+                    <h3 class="stat-value">{{ stats.encrypted_files }}</h3>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon blue">🔓</div>
+                <div class="stat-data">
+                    <span class="stat-label">Decrypted Files</span>
+                    <h3 class="stat-value">{{ stats.decrypted_files }}</h3>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon orange">💾</div>
+                <div class="stat-data">
+                    <span class="stat-label">Data Processed</span>
+                    <h3 class="stat-value">
+                        {% if stats.total_bytes > 1048576 %}
+                            {{ (stats.total_bytes / 1048576)|round(2) }} MB
+                        {% elif stats.total_bytes > 1024 %}
+                            {{ (stats.total_bytes / 1024)|round(1) }} KB
+                        {% else %}
+                            {{ stats.total_bytes }} B
+                        {% endif %}
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Quick-Launch Cards -->
+        <div class="action-cards-grid">
+            <div class="action-card">
+                <div class="card-badge">AES-256-GCM</div>
+                <div class="action-card-icon">🔐</div>
+                <h2>Encrypt a File</h2>
+                <p>Protect your files with Galois/Counter Mode authenticated encryption and a fresh 12-byte nonce.</p>
+                <a href="{{ url_for('encrypt') }}" class="btn-primary">Encrypt File &rarr;</a>
+            </div>
+
+            <div class="action-card">
+                <div class="card-badge">INTEGRITY VERIFY</div>
+                <div class="action-card-icon">🔓</div>
+                <h2>Decrypt a File</h2>
+                <p>Verify ciphertext authenticity and recover your original file using your 256-bit AES secret key.</p>
+                <a href="{{ url_for('decrypt') }}" class="btn-secondary">Decrypt File &rarr;</a>
+            </div>
+        </div>
+
+        <!-- Recent Activity Table -->
+        <div class="content-panel">
+            <div class="panel-header">
+                <div>
+                    <h2>Recent Cryptographic Activity</h2>
+                    <p>Real-time audit log of your encryption and decryption actions</p>
+                </div>
+                <a href="{{ url_for('history') }}" class="btn-text">View All History &rarr;</a>
+            </div>
+
+            {% if recent_history %}
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>File Name</th>
+                                <th>Operation</th>
+                                <th>File Size</th>
+                                <th>Date & Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in recent_history %}
+                                <tr>
+                                    <td class="font-mono">
+                                        <strong>{{ item['original_filename'] }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge-op badge-{{ item['operation']|lower }}">
+                                            {% if item['operation'] == 'Encryption' %}🔐{% else %}🔓{% endif %}
+                                            {{ item['operation'] }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if item['file_size'] > 1048576 %}
+                                            {{ (item['file_size'] / 1048576)|round(2) }} MB
+                                        {% elif item['file_size'] > 1024 %}
+                                            {{ (item['file_size'] / 1024)|round(1) }} KB
+                                        {% else %}
+                                            {{ item['file_size'] }} B
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted">{{ item['created_at'] }}</td>
+                                    <td>
+                                        <span class="status-pill status-{{ item['status']|lower }}">
+                                            ● {{ item['status'] }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <span class="empty-icon">📭</span>
+                    <h3>No file operations yet</h3>
+                    <p>Encrypt your first file to initiate your secure cryptographic activity log.</p>
+                    <a href="{{ url_for('encrypt') }}" class="btn-primary">Encrypt Your First File</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

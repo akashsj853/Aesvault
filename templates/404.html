@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}404 Not Found — AESVault{% endblock %}
+
+{% block content %}
+<div class="error-page-wrapper">
+    <div class="error-box">
+        <div class="error-code">404</div>
+        <div class="error-badge">RESOURCE NOT FOUND</div>
+        <h2>Page or Encrypted File Missing</h2>
+        <p>The requested URL does not exist or the temporary file has expired from the secure storage cache.</p>
+        <div class="error-actions">
+            <a href="{{ url_for('index') }}" class="btn-primary">Return to Safety (Home)</a>
+            <a href="{{ url_for('dashboard') }}" class="btn-secondary">Go to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

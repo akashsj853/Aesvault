@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}500 Internal Error — AESVault{% endblock %}
+
+{% block content %}
+<div class="error-page-wrapper">
+    <div class="error-box">
+        <div class="error-code">500</div>
+        <div class="error-badge error-badge-red">SYSTEM EXCEPTION</div>
+        <h2>Cryptographic Processing Failure</h2>
+        <p>A server-side operation failed. Raw cryptographic stack traces are suppressed for defense-in-depth security.</p>
+        <div class="error-actions">
+            <a href="{{ url_for('dashboard') }}" class="btn-primary">Return to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

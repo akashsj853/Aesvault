@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account — AESVault{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon">🛡️</div>
+            <h2>Create AESVault Account</h2>
+            <p>Start encrypting files with authenticated AES-256-GCM.</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('register') }}" class="auth-form" id="registerForm">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" value="{{ name or '' }}" placeholder="Alex Morgan" required autocomplete="name">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" value="{{ email or '' }}" placeholder="alex@university.edu" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password (Minimum 6 characters)</label>
+                <div class="password-input-wrap">
+                    <input type="password" id="password" name="password" minlength="6" placeholder="••••••••" required autocomplete="new-password">
+                    <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('password', this)">👁️</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <div class="password-input-wrap">
+                    <input type="password" id="confirm_password" name="confirm_password" minlength="6" placeholder="••••••••" required autocomplete="new-password">
+                    <button type="button" class="btn-toggle-pw" onclick="togglePasswordVisibility('confirm_password', this)">👁️</button>
+                </div>
+            </div>
+
+            <div class="security-notice-badge">
+                <span>🔒 Security note:</span> Passwords are automatically hashed with Werkzeug pbkdf2:sha256 before database storage. Plaintext is never saved.
+            </div>
+
+            <button type="submit" class="btn-primary btn-block">Create Account &rarr;</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{{ url_for('login') }}">Sign in here</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
