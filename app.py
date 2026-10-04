@@ -3,6 +3,7 @@ AESVault - Secure File Encryption and Decryption System.
 Main Flask Application Server.
 
 Focus: AES (Advanced Encryption Standard) - AES-256-GCM authenticated encryption.
+Compatible with standard WSGI servers and Vercel serverless execution.
 """
 
 import os
@@ -16,7 +17,7 @@ from flask import (
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
 
-from config import Config
+from config import Config, BASE_DIR
 from database import (
     init_db, create_user, get_user_by_email, get_user_by_id,
     update_user_name, record_file_operation, get_user_history,
@@ -27,16 +28,26 @@ from crypto import (
     encrypt_text, decrypt_text
 )
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, 'templates'),
+    static_folder=os.path.join(BASE_DIR, 'static')
+)
 app.config.from_object(Config)
 
 # Ensure required storage folders exist with proper permissions
 for folder in [Config.UPLOAD_FOLDER, Config.ENCRYPTED_FOLDER, Config.DECRYPTED_FOLDER, Config.INSTANCE_FOLDER]:
-    os.makedirs(folder, exist_ok=True)
+    try:
+        os.makedirs(folder, exist_ok=True)
+    except Exception:
+        pass
 
 # Initialize database schema on startup
-with app.app_context():
-    init_db()
+try:
+    with app.app_context():
+        init_db()
+except Exception as e:
+    print(f"Warning: DB initialization error: {e}")
 
 # -------------------------------------------------------------
 # Authentication Decorator
@@ -55,7 +66,10 @@ def inject_user():
     """Inject current user profile into templates."""
     user = None
     if 'user_id' in session:
-        user = get_user_by_id(session['user_id'])
+        try:
+            user = get_user_by_id(session['user_id'])
+        except Exception:
+            user = None
     return {'current_user': user}
 
 # -------------------------------------------------------------
@@ -144,8 +158,12 @@ def logout():
 def dashboard():
     """User Dashboard with real statistics and recent activities."""
     user_id = session['user_id']
-    stats = get_user_statistics(user_id)
-    recent_history = get_user_history(user_id)[:5]
+    try:
+        stats = get_user_statistics(user_id)
+        recent_history = get_user_history(user_id)[:5]
+    except Exception:
+        stats = {"total_operations": 0, "encrypted_files": 0, "decrypted_files": 0, "total_bytes": 0}
+        recent_history = []
     return render_template('dashboard.html', stats=stats, recent_history=recent_history)
 
 @app.route('/encrypt', methods=['GET', 'POST'])
@@ -182,18 +200,23 @@ def encrypt():
             # Save the encrypted file securely
             encrypted_filename = f"{original_filename}.enc"
             save_path = os.path.join(Config.ENCRYPTED_FOLDER, f"{session['user_id']}_{int(time.time())}_{encrypted_filename}")
+            
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
             with open(save_path, 'wb') as f:
                 f.write(encrypted_data)
 
             # Record in SQLite history
-            record_file_operation(
-                user_id=session['user_id'],
-                original_filename=original_filename,
-                encrypted_filename=encrypted_filename,
-                file_size=file_size,
-                operation='Encryption',
-                status='Success'
-            )
+            try:
+                record_file_operation(
+                    user_id=session['user_id'],
+                    original_filename=original_filename,
+                    encrypted_filename=encrypted_filename,
+                    file_size=file_size,
+                    operation='Encryption',
+                    status='Success'
+                )
+            except Exception as db_err:
+                print(f"Warning: Failed to record history: {db_err}")
 
             # If requested as AJAX/JSON
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.accept_mimetypes.accept_json:
@@ -252,18 +275,23 @@ def decrypt():
             safe_rec_fname = secure_filename(recovered_filename) or "decrypted_file"
             save_name = f"{session['user_id']}_{int(time.time())}_{safe_rec_fname}"
             save_path = os.path.join(Config.DECRYPTED_FOLDER, save_name)
+            
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
             with open(save_path, 'wb') as f:
                 f.write(decrypted_bytes)
 
             # Record in SQLite history
-            record_file_operation(
-                user_id=session['user_id'],
-                original_filename=safe_rec_fname,
-                encrypted_filename=file.filename,
-                file_size=len(decrypted_bytes),
-                operation='Decryption',
-                status='Success'
-            )
+            try:
+                record_file_operation(
+                    user_id=session['user_id'],
+                    original_filename=safe_rec_fname,
+                    encrypted_filename=file.filename,
+                    file_size=len(decrypted_bytes),
+                    operation='Decryption',
+                    status='Success'
+                )
+            except Exception as db_err:
+                print(f"Warning: Failed to record history: {db_err}")
 
             # Handle JSON/AJAX requests
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.accept_mimetypes.accept_json:
@@ -282,15 +310,17 @@ def decrypt():
             )
 
         except ValueError as e:
-            # Record failed decryption attempt in audit history
-            record_file_operation(
-                user_id=session['user_id'],
-                original_filename=file.filename,
-                encrypted_filename=file.filename,
-                file_size=len(encrypted_bytes),
-                operation='Decryption',
-                status='Failed'
-            )
+            try:
+                record_file_operation(
+                    user_id=session['user_id'],
+                    original_filename=file.filename,
+                    encrypted_filename=file.filename,
+                    file_size=len(encrypted_bytes),
+                    operation='Decryption',
+                    status='Failed'
+                )
+            except Exception:
+                pass
             flash(str(e), "danger")
             return render_template('decrypt.html')
         except Exception:
@@ -315,7 +345,6 @@ def download_file(file_type, filename):
 
     if file_type == 'encrypted':
         directory = Config.ENCRYPTED_FOLDER
-        # Strip user ID and timestamp prefix for nice download name
         download_name = safe_name.split('_', 2)[-1]
     elif file_type == 'decrypted':
         directory = Config.DECRYPTED_FOLDER
@@ -341,7 +370,10 @@ def history():
     op_filter = request.args.get('filter', 'All')
     search_q = request.args.get('search', '').strip()
 
-    records = get_user_history(user_id, operation_filter=op_filter, search_query=search_q)
+    try:
+        records = get_user_history(user_id, operation_filter=op_filter, search_query=search_q)
+    except Exception:
+        records = []
     return render_template('history.html', records=records, current_filter=op_filter, search_query=search_q)
 
 @app.route('/aes')
